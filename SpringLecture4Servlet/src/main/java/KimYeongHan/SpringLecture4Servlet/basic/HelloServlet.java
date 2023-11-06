@@ -7,10 +7,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-@WebServlet(name = "helloServlet", urlPatterns = "/hello") // 서블릿 이름, URL 매핑
+@WebServlet(name = "helloServlet", urlPatterns= "/hello")
 public class HelloServlet extends HttpServlet {
 
-    // HTTP 요청을 통해 매핑된 URL이 호출되면, 서블릿 컨테이너는 다음 메서드를 실행한다.
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -18,7 +17,7 @@ public class HelloServlet extends HttpServlet {
         System.out.println("request = " + request);
         System.out.println("response = " + response);
 
-        String username = request.getParameter("username");
+        String username = request.getParameter("username"); // username 에 대한 쿼리 파라미터 값을 가져온다.
         System.out.println("username = " + username);
 
         response.setContentType("text/plain");
