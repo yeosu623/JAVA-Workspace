@@ -1,8 +1,6 @@
-package KimYeongHan.SpringLecture4ItemService.domain.item;
+package hello.itemservice.domain.item;
 
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Data
 public class Item {

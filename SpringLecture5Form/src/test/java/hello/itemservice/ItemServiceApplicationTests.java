@@ -1,10 +1,10 @@
-package KimYeongHan.SpringLecture4ItemService;
+package hello.itemservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SpringLecture4ItemServiceApplicationTests {
+class ItemServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

@@ -1,4 +1,4 @@
-package KimYeongHan.SpringLecture4ItemService.domain.item;
+package hello.itemservice.domain.item;
 
 import org.springframework.stereotype.Repository;
 
@@ -10,13 +10,12 @@ import java.util.Map;
 @Repository
 public class ItemRepository {
 
-    private static final Map<Long, Item> store = new HashMap<>(); // static
-    private static long sequence = 0L; // static
+    private static final Map<Long, Item> store = new HashMap<>(); //static
+    private static long sequence = 0L; //static
 
     public Item save(Item item) {
         item.setId(++sequence);
         store.put(item.getId(), item);
-
         return item;
     }
 
@@ -38,4 +37,5 @@ public class ItemRepository {
     public void clearStore() {
         store.clear();
     }
+
 }

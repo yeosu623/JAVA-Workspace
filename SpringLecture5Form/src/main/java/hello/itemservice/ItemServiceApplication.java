@@ -1,13 +1,13 @@
-package KimYeongHan.SpringLecture4ItemService;
+package hello.itemservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SpringLecture4ItemServiceApplication {
+public class ItemServiceApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SpringLecture4ItemServiceApplication.class, args);
+		SpringApplication.run(ItemServiceApplication.class, args);
 	}
 
 }
