@@ -5,37 +5,82 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.StringTokenizer;
+
+class Node {
+    int key;
+    Node left, right;
+
+    public Node(int key) {
+        this.key = key;
+    }
+}
+
+class BST {
+    public Node root;
+
+    protected Node treeSearch(int key) {
+        Node x = root;
+
+        while(true) {
+            int cmp = key - x.key;
+
+            if(cmp == 0) return x;
+            else if(cmp < 0) {
+                if(x.left == null) return x;
+                else x = x.left;
+            }
+            else {
+                if(x.right == null) return x;
+                else x = x.right;
+            }
+        }
+    }
+
+    public void put(int key) {
+        if(root == null) {
+            root = new Node(key);
+            return;
+        }
+
+        Node x = treeSearch(key);
+        int cmp = key - x.key;
+
+        Node newNode = new Node(key);
+        if(cmp < 0) x.left = newNode;
+        else x.right = newNode;
+    }
+
+    public void postorder(Node x, ArrayList<Integer> keyList) {
+        if(x != null) {
+            postorder(x.left, keyList);
+            postorder(x.right, keyList);
+            keyList.add(x.key);
+        }
+    }
+}
 
 public class Main {
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
         BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(System.out));
 
-        int a = Integer.parseInt(br.readLine());
-        ArrayList<Integer> v = new ArrayList<>();
+        StringTokenizer st;
+        String str;
+        BST bst = new BST();
 
-        StringTokenizer st = new StringTokenizer(br.readLine());
-        for (int i = 0; i < a; i++) {
-            int b = Integer.parseInt(st.nextToken());
-            v.add(b);
+        while((str = br.readLine()) != null)
+        {
+            st = new StringTokenizer(str, " ");
+            int input = Integer.parseInt(st.nextToken());
+            bst.put(input);
         }
 
-        HashSet<Integer> set = new HashSet<>(v);
-        ArrayList<Integer> w = new ArrayList<>(set);
-        Collections.sort(w);
+        ArrayList<Integer> answer = new ArrayList<>();
+        bst.postorder(bst.root, answer);
 
-        HashMap<Integer, Integer> indexMap = new HashMap<>();
-        for (int i = 0; i < w.size(); i++) {
-            indexMap.put(w.get(i), i);
-        }
-
-        for (int n : v) {
-            bw.write(indexMap.get(n) + " ");
-        }
+        for(int i = 0; i < answer.size(); i++)
+            bw.write(answer.get(i).toString() + "\n");
 
         br.close();
         bw.flush();
