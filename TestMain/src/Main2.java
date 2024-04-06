@@ -31,15 +31,15 @@ class TreeNode {
     }
 }
 
-class AVLNode {
+class RBNode {
     int val;
     int N;
     int aux;
-    AVLNode left, right;
-    AVLNode parent;
+    RBNode left, right;
+    RBNode parent;
 
-    public AVLNode() {};
-    public AVLNode(int val) {
+    public RBNode() {};
+    public RBNode(int val) {
         this.val = val;
         this.N = 1;
     }
@@ -53,9 +53,9 @@ class AVLNode {
     }
 }
 
-class AVL {
-    AVLNode root;
-    public void preorder(AVLNode x) {
+class RB {
+    RBNode root;
+    public void preorder(RBNode x) {
         if(x != null) {
             System.out.print(x.val + " ");
             preorder(x.left);
@@ -63,7 +63,7 @@ class AVL {
         }
     }
 
-    public TreeNode copyToTreeNode(AVLNode original) {
+    public TreeNode copyToTreeNode(RBNode original) {
         TreeNode copy;
         if(original != null) {
             copy = new TreeNode();
@@ -75,8 +75,8 @@ class AVL {
         return null;
     }
 
-    protected AVLNode treeSearch(int val) {
-        AVLNode x = root;
+    protected RBNode treeSearch(int val) {
+        RBNode x = root;
         while(true) {
             int cmp = val - x.val;
             if(cmp == 0) return x;
@@ -93,44 +93,95 @@ class AVL {
 
     public void put(int val) {
         if(root == null) {
-            root = new AVLNode(val);
+            root = new RBNode(val);
             return;
         }
 
-        AVLNode x = treeSearch(val);
+        RBNode x = treeSearch(val);
         int cmp = val - x.val;
 
-        AVLNode newAVLNode = new AVLNode(val);
-        if(cmp < 0) x.left = newAVLNode;
-        else x.right = newAVLNode;
-        newAVLNode.parent = x;
-        rebalanceInsert(newAVLNode);
+        RBNode newRBNode = new RBNode(val);
+        if(cmp < 0) x.left = newRBNode;
+        else x.right = newRBNode;
+        newRBNode.parent = x;
+        rebalanceInsert(newRBNode);
     }
 
-    protected void rebalanceInsert(AVLNode x) {
-        if(isLeaf(x)) {
-            rebalance(x);
+    protected void rebalanceInsert(RBNode x) {
+        makeRed(x);
+
+        if (x != root && isRed(x.parent)) {
+            resolveRed(x);
         }
     }
 
-    protected boolean isLeaf(AVLNode x) {
+
+
+    boolean isBlack(RBNode x) {
+        return (x == null) || (x.getAux() == 0);
+    }
+
+    boolean isRed(RBNode x) {
+        return (x != null) && (x.getAux() == 1);
+    }
+
+    void makeBlack(RBNode x) {
+        x.setAux(0);
+    }
+
+    void makeRed(RBNode x) {
+        x.setAux(1);
+    }
+
+    RBNode sibling(RBNode x) {
+        RBNode p = x.parent;
+        if(p.left == x) return p.right;
+        else return p.left;
+    }
+
+    private void resolveRed(RBNode x) {
+        RBNode parent, uncle, middle, grand;
+
+        parent = x.parent;
+        if(isRed(parent)) {
+            uncle = sibling(parent);
+            if(uncle == null || isBlack(uncle)) {
+                middle = restructure(x);
+                makeBlack(middle);
+                makeRed(middle.left);
+                makeRed(middle.right);
+            }
+            else {
+                makeBlack(parent);
+                makeBlack(uncle);
+                grand = parent.parent;
+                if(grand != root) {
+                    makeRed(grand);
+                    resolveRed(grand);
+                }
+            }
+        }
+    }
+
+
+    protected boolean isLeaf(RBNode x) {
         return x.left == null && x.right == null;
     }
 
-    private void resetSize(AVLNode x, int value) {
+    private void resetSize(RBNode x, int value) {
         for( ; x != null; x = x.parent)
             x.N += value;
     }
 
-    protected void relink(AVLNode parent, AVLNode child, boolean makeLeft) {
+    protected void relink(RBNode parent, RBNode child, boolean makeLeft) {
         if(child != null) child.parent = parent;
         if(makeLeft) parent.left = child;
         else parent.right = child;
     }
 
-    protected void rotate(AVLNode x) {
-        AVLNode y = x.parent;
-        AVLNode z = y.parent;
+    protected void rotate(RBNode x) {
+        RBNode y = x.parent;
+        RBNode z = y.parent;
         if(z == null) {
             root = x;
             x.parent = null;
@@ -147,9 +198,9 @@ class AVL {
         }
     }
 
-    protected AVLNode restructure(AVLNode x) {
-        AVLNode y = x.parent;
-        AVLNode z = y.parent;
+    protected RBNode restructure(RBNode x) {
+        RBNode y = x.parent;
+        RBNode z = y.parent;
         if((x == y.left) == (y == z.left)) {
             rotate(y);
             return y;
@@ -161,23 +212,23 @@ class AVL {
         }
     }
 
-    private int height(AVLNode x) {
+    private int height(RBNode x) {
         return (x == null) ? 0 : x.getAux();
     }
 
-    private void setHeight(AVLNode x, int height) {
+    private void setHeight(RBNode x, int height) {
         x.setAux(height);
     }
 
-    private void recomputeHeight(AVLNode x) {
+    private void recomputeHeight(RBNode x) {
         setHeight(x, 1 + Math.max(height(x.left), height(x.right)));
     }
 
-    private boolean isBalanced(AVLNode x) {
+    private boolean isBalanced(RBNode x) {
         return Math.abs(height(x.left) - height(x.right)) <= 1;
     }
 
-    private AVLNode tallerChild(AVLNode x) {
+    private RBNode tallerChild(RBNode x) {
         if(height(x.left) > height(x.right)) return x.left;
         if(height(x.left) < height(x.right)) return x.right;
         if(x == root) return x.left;
@@ -185,13 +236,13 @@ class AVL {
         else return x.right;
     }
 
-    private void rebalance(AVLNode x) {
+    private void rebalance(RBNode x) {
         do {
             if(!isBalanced(x)) {
                 x = restructure(tallerChild(tallerChild(x)));
                 recomputeHeight(x.left);
                 recomputeHeight(x.right);
-                for(AVLNode p = x; p != null; p = p.parent)
+                for(RBNode p = x; p != null; p = p.parent)
                     recomputeHeight(p);
             }
             x = x.parent;
@@ -201,15 +252,24 @@ class AVL {
 
 class Solution {
     public TreeNode sortedListToBST(ListNode head) {
-        AVL avl = new AVL();
+        RB rb = new RB();
 
         for(ListNode listNode = head; listNode != null; listNode = listNode.next)
-            avl.put(listNode.val);
+            rb.put(listNode.val);
 
-        return avl.copyToTreeNode(avl.root);
+        return rb.copyToTreeNode(rb.root);
     }
 }
 public class Main2 {
+    public static void main(String[] args) {
+        RB rb = new RB();
+        int[] data = {1,5,7,13,15,10,12,20,16,22};
 
+        for(int i = 0; i < data.length; i++) {
+            rb.put(data[i]);
+        }
+
+        rb.preorder(rb.root);
+    }
 }
 
