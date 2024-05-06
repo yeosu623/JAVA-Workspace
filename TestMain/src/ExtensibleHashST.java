@@ -1,181 +1,207 @@
-// 21911981 정수열
+// 22113637 김민우
 import java.util.*;
 
-class Pair<T, U> {
-
-    public T first;
-    public U second;
-
-    public Pair(T first, U second) {
-        this.first = first;
-        this.second = second;
-    }
-}
-
 class Bucket<K, V> implements Comparable<Bucket<K, V>> {
-    public int bucketNum;
+    public int bucketNumber;
+    public int bucketSize;
+    public int bucketBit;
 
-    public int size;
-    public int bits;
-    ArrayList<Pair<K, V>> data = new ArrayList<>();
+    public HashMap<K, V> data = new HashMap<>();
 
-    public Bucket(int bucketNum, int size, int bits) {
-        this.bucketNum = bucketNum;
-        this.size = size;
-        this.bits = bits;
+    public Bucket(int bucketNumber, int bucketSize, int bucketBit) {
+        this.bucketNumber = bucketNumber;
+        this.bucketSize = bucketSize;
+        this.bucketBit = bucketBit;
     }
 
     @Override
     public int compareTo(Bucket<K, V> o) {
-        if(bucketNum < o.bucketNum) return -1;
-        else if(bucketNum == o.bucketNum) return 0;
-        else return 1;
+        if(bucketNumber > o.bucketNumber) return 1;
+        else if(bucketNumber == o.bucketNumber) return 0;
+        else return -1;
     }
 }
+
 public class ExtensibleHashST<K, V> {
 
-    private int i = 0;
-    private int n = 0;
-    private int bucketNum = 0;
-    private int bucketSize;
+    int i = 0;
+    int N = 0;
+    int bucketSize;
+    int bucketNumber = 0;
     ArrayList<Bucket<K, V>> directory = new ArrayList<>();
+
+    public ExtensibleHashST() {
+        bucketSize = 4;
+        Bucket<K, V> initialBucket = new Bucket<>(bucketNumber++, bucketSize, 0);
+        directory.add(initialBucket);
+    }
+
+    public ExtensibleHashST(int size) {
+        bucketSize = size;
+        Bucket<K, V> initialBucket = new Bucket<>(bucketNumber++, bucketSize, 0);
+        directory.add(initialBucket);
+    }
+
+    public boolean contains(K key) { return get(key) != null; }
+    public boolean isEmpty() { return N == 0; }
+    public int size() { return N; }
 
     private int hash(K key) {
         return key.hashCode() & ((1 << i) - 1);
     }
 
-    public ExtensibleHashST() {
-        bucketSize = 4;
-        directory.add(new Bucket<>(bucketNum++, bucketSize, 0));
-    }
-
-    public ExtensibleHashST(int size) {
-        bucketSize = size;
-        directory.add(new Bucket<>(bucketNum++, bucketSize, 0));
-    }
-
-    public boolean contains(K key) {
-        return get(key) != null;
-    }
-
-    public boolean isEmpty() {
-        return n == 0;
-    }
-
-    public long size() {
-        return n;
-    }
-
     public V get(K key) {
-        int h = hash(key);
-        Bucket<K, V> bucket = directory.get(h);
+        int hashIndex = hash(key);
 
-        for(Pair<K, V> data : bucket.data)
-            if(data.first.equals(key))
-                return data.second;
+        Bucket<K, V> bucket = directory.get(hashIndex);
+        HashMap<K, V> data = bucket.data;
 
-        return null;
+        return data.get(key);
     }
 
     public void put(K key, V value) {
-        int h = hash(key);
-        Bucket<K, V> bucket = directory.get(h);
-        ArrayList<Pair<K,V>> dataArr = bucket.data;
+        int hashIndex = hash(key);
 
-        for(Pair<K, V> data : dataArr) {
-            if(data.first.equals(key)) {
-                data.second = value;
-                return;
-            }
+        Bucket<K, V> bucket = directory.get(hashIndex);
+        HashMap<K, V> data = bucket.data;
+
+        V beforeValue = get(key);
+        if(beforeValue == null) {
+            N++;
         }
-        dataArr.add(new Pair<>(key, value));
-        n++;
+        data.put(key, value);
 
-        while(dataArr.size() > bucketSize) {
+        while(data.size() > bucketSize) {
+            if(i == bucket.bucketBit) {
+                Bucket<K, V> newBucket = null;
 
-            if(bucket.bits < i) {
-                ArrayList<Integer> connectedHash = new ArrayList<>();
-                for(int idx = 0; idx < directory.size(); idx++) {
-                    if(directory.get(idx) == bucket)
-                        connectedHash.add(idx);
-                }
-
-                bucket.bits++;
-                Bucket<K, V> newBucket = new Bucket<>(bucketNum++, bucketSize, bucket.bits);
-                for(int idx : connectedHash) {
-                    if( ((idx >> (bucket.bits - 1)) & 1) == 0) continue;
-                    else directory.set(idx, newBucket);
-                }
-
-                ArrayList<Pair<K, V>> dataArrCopy = new ArrayList<>(dataArr);
-                dataArr.clear();
-                for(Pair<K, V> data : dataArrCopy) {
-                    directory.get(hash(data.first)).data.add(new Pair<>(data.first, data.second));
-                }
-            }
-
-            else {
-                i++;
-
-                int directorySize = directory.size();
-                for(int idx = 0; idx < directorySize; idx++) {
-                    Bucket<K, V> targetBucket = directory.get(idx);
-                    if(targetBucket != bucket) directory.add(targetBucket);
+                for(int j = 0; j < Math.pow(2, i); j++) {
+                    if(j != hashIndex) {
+                        Bucket<K, V> bucketTemp = directory.get(j);
+                        directory.add(bucketTemp);
+                    }
                     else {
-                        bucket.bits++;
-                        Bucket<K, V> newBucket = new Bucket<>(bucketNum++, bucketSize, bucket.bits);
+                        newBucket = new Bucket<>(bucketNumber++, bucketSize, i+1);
+                        bucket.bucketBit++;
+
                         directory.add(newBucket);
                     }
                 }
 
-                ArrayList<Pair<K, V>> dataArrCopy = new ArrayList<>(dataArr);
-                dataArr.clear();
-                for(Pair<K, V> data : dataArrCopy) {
-                    directory.get(hash(data.first)).data.add(new Pair<>(data.first, data.second));
+                i++;
+
+                Iterator<K> it = data.keySet().iterator();
+                ArrayList<K> removeKeys = new ArrayList<>();
+                while(it.hasNext()) {
+                    K keyX = it.next();
+                    int hashData = hash(keyX);
+
+                    int mask = 1 << (bucket.bucketBit-1);
+                    if((hashData & mask) != 0) {
+                        removeKeys.add(keyX);
+                    }
+                }
+
+                Iterator<K> it2 = removeKeys.iterator();
+                while(it2.hasNext()) {
+                    K keyX = it2.next();
+                    V valueX = data.get(keyX);
+
+                    data.remove(keyX);
+                    newBucket.data.put(keyX, valueX);
+                }
+            }
+            else {
+                Bucket<K, V> newBucket = new Bucket<>(bucketNumber++, bucketSize, bucket.bucketBit+1);
+                bucket.bucketBit++;
+
+                for(int j = 0; j < directory.size(); j++) {
+                    if(directory.get(j) == bucket) {
+                        int mask = 1 << (bucket.bucketBit-1);
+
+                        if((j & mask) != 0)
+                            directory.set(j, newBucket);
+                    }
+                }
+
+                Iterator<K> it = data.keySet().iterator();
+                ArrayList<K> removeKeys = new ArrayList<>();
+                while(it.hasNext()) {
+                    K keyX = it.next();
+                    int hashData = hash(keyX);
+
+                    int mask = 1 << (bucket.bucketBit-1);
+                    if((hashData & mask) != 0) {
+                        removeKeys.add(keyX);
+                    }
+                }
+
+                Iterator<K> it2 = removeKeys.iterator();
+                while(it2.hasNext()) {
+                    K keyX = it2.next();
+                    V valueX = data.get(keyX);
+
+                    data.remove(keyX);
+                    newBucket.data.put(keyX, valueX);
                 }
             }
         }
     }
 
     public Iterable<K> keys() {
-        ArrayList<K> keys = new ArrayList<>();
+        HashSet<K> keys = new HashSet<>();
 
-        for(Bucket<K, V> bucket : directory)
-            for(Pair<K, V> data : bucket.data)
-                keys.add(data.first);
+        for(int j = 0; j < directory.size(); j++) {
+            Bucket<K, V> bucket = directory.get(j);
+
+            Iterator<K> it = bucket.data.keySet().iterator();
+            while(it.hasNext()) {
+                K key = it.next();
+                keys.add(key);
+            }
+        }
 
         return keys;
     }
 
     public void summaryInfo() {
-        System.out.printf(
-                "Global i = %d비트, (key, value) 쌍의 수 = %d, 버킷의 수 = %d\n",
-                i, n, bucketNum
+        System.out.println(
+                "Global i = " + i + "비트, " +
+                        "(key, value) 쌍의 수 = " + N + ", " +
+                        "버킷의 수 = " + bucketNumber
         );
     }
 
     public void detailInfo() {
         summaryInfo();
 
-        TreeSet<Bucket<K, V>> bucketSet = new TreeSet<>();
-        for(int idx = 0; idx < directory.size(); idx++) {
-            System.out.printf(
-                    "Directory[%d] -> Bucket %d\n",
-                    idx, directory.get(idx).bucketNum
+        TreeSet<Bucket<K, V>> buckets = new TreeSet<>();
+
+        for(int j = 0; j < directory.size(); j++) {
+            buckets.add(directory.get(j));
+            int bucketNumberTemp = directory.get(j).bucketNumber;
+            System.out.println(
+                    "Directory[" + j + "] -> " +
+                            "Bucket " + bucketNumberTemp
             );
-            bucketSet.add(directory.get(idx));
         }
         System.out.println();
 
-        for(Bucket<K, V> bucket : bucketSet) {
-            System.out.printf(
-                    "Bucket %d: size = %d, nbits = %d비트\n",
-                    bucket.bucketNum, bucket.data.size(), bucket.bits
+        Iterator<Bucket<K, V>> it = buckets.iterator();
+        while(it.hasNext()) {
+            Bucket<K, V> bucket = it.next();
+            System.out.println(
+                    "Bucket " + bucket.bucketNumber + ": " +
+                            "size = " + bucket.data.size() + ", " +
+                            "nbits = " + bucket.bucketBit + "비트"
             );
-            for(Pair<K, V> data : bucket.data) {
-                System.out.println(
-                        "\t" + data.first + " : " + data.second
-                );
+
+            Iterator<K> it2 = bucket.data.keySet().iterator();
+            while(it2.hasNext()) {
+                K key = it2.next();
+                V value = get(key);
+
+                System.out.println("    " + key + " : " + value);
             }
         }
     }
