@@ -1,5 +1,6 @@
 package YU.QRtest.QR;
 
+import com.google.gson.JsonObject;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -16,24 +17,43 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
-/************
- * @info : QR Code 생성 및 제공 Controller
- * @name : QrController
- * @date : 2023/03/24 5:32 PM
- * @version : 1.0.0
- * @Description :
- ************/
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 public class QrController {
 
-    @GetMapping("/qr/tistory")
-    public ResponseEntity<byte[]> qrToTistory() throws WriterException, IOException {
+    public String jsonToStringExample(){
+        String key1 = "신한카드";
+        String value1 = "정수열";
+
+        String key2 = "Card Number";
+        String value2 = "9999-0000-1111-2222";
+
+        String key3 = "Expire Date";
+        String value3 = "2024/05/02";
+
+        JsonObject obj =new JsonObject();
+
+        obj.addProperty(key1, value1);
+        obj.addProperty(key2, value2);
+
+        JsonObject data = new JsonObject();
+
+        data.addProperty(key3, value3);
+
+        obj.add("Internal Data", data);
+
+        System.out.println(obj);
+
+        return obj.toString();
+    }
+
+    @GetMapping("/qr/code")
+    public ResponseEntity<byte[]> QRCode() throws WriterException, IOException {
         // QR 정보
         int width = 200;
         int height = 200;
-        String url = "https://lucas-owner.tistory.com/";
+        String url = jsonToStringExample();
 
         // QR Code - BitMatrix: qr code 정보 생성
         BitMatrix encode = new MultiFormatWriter()
@@ -55,7 +75,7 @@ public class QrController {
                     .contentType(MediaType.IMAGE_PNG)
                     .body(out.toByteArray());
 
-        }catch (Exception e){log.warn("QR Code OutputStream 도중 Excpetion 발생, {}", e.getMessage());}
+        }catch (Exception e){System.out.println("Exception 발생 : " + e);}
 
         return null;
     }
