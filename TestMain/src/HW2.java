@@ -1,37 +1,35 @@
-// 22113637 김민우
-import java.util.ArrayList;
+// 21911981 정수열
 import java.util.Scanner;
 
 public class HW2 {
 
-    static int n;
-    static int k;
-
-    static void recursion(int count, int number, ArrayList<Integer> arrOrigin) {
-        ArrayList<Integer> arrPart;
-
-        count++;
-        for(int i = number; i <= n - (k - count); i++) {
-            arrPart = new ArrayList<>(arrOrigin);
-            arrPart.add(i);
-
-            if(count == k) {
-                System.out.print("[");
-                for(int j = 0; j < k; j++) {
-                    System.out.print(arrPart.get(j));
-                    if(j != k-1) System.out.print(", ");
-                }
-                System.out.print("] ");
-            }
-            else recursion(count, i+1, arrPart);
-        }
-    }
     public static void main(String[] args) {
+        int[][] cache = new int[1000][1000];
         Scanner sc = new Scanner(System.in);
-        System.out.print("정수 n과 k를 입력? ");
-        n = sc.nextInt();
-        k = sc.nextInt();
+        String s1 = sc.nextLine();
+        String s2 = sc.nextLine();
 
-        recursion(0, 1, new ArrayList<>());
+        for(int i = 0; i < s1.length(); i++)
+            for(int j = 0; j < s2.length(); j++) {
+                if(s1.charAt(i) == s2.charAt(j)) cache[i+1][j+1] = cache[i][j] + 1;
+                else cache[i+1][j+1] = Math.max(cache[i+1][j], cache[i][j+1]);
+            }
+
+        int y = s1.length();
+        int x = s2.length();
+        String s = "";
+        while(cache[y][x] != 0) {
+            if(cache[y][x] == cache[y-1][x]) y--;
+            else if(cache[y][x] == cache[y][x-1]) x--;
+            else {
+                s += s1.charAt(y-1);
+                y--;
+                x--;
+            }
+        }
+        s = new StringBuilder(s).reverse().toString();
+
+        System.out.println(s);
+        System.out.println(cache[s1.length()][s2.length()]);
     }
 }
