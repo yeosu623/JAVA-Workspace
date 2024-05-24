@@ -2,7 +2,6 @@ package YU.QRtest.QR;
 
 import com.google.gson.JsonObject;
 import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageConfig;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Hashtable;
 
 @RestController
 @RequiredArgsConstructor
@@ -57,13 +55,9 @@ public class QrController {
         int height = 200;
         String url = jsonToStringExample();
 
-        // 한글 설정
-        Hashtable hints = new Hashtable();
-        hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
-
         // QR Code - BitMatrix: qr code 정보 생성
         BitMatrix encode = new MultiFormatWriter()
-                .encode(url, BarcodeFormat.QR_CODE, width, height, hints);
+                .encode(url, BarcodeFormat.QR_CODE, width, height);
 
         // QR Code - Image 생성. : 1회성으로 생성해야 하기 때문에
         // stream으로 Generate(1회성이 아니면 File로 작성 가능.)
