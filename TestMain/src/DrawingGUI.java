@@ -1,13 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
+import java.util.Scanner;
 
-public class DrawingGUI extends JFrame{
+public class DrawingGUI extends JFrame {
 
     // Variables
     Integer selectLineNum = 0;
@@ -18,63 +16,41 @@ public class DrawingGUI extends JFrame{
     ArrayList<Color> lineColorArr = new ArrayList<>();
 
     enum Mode {
-        DRAW, MOVE
+        DRAW
     }
+
     Mode mode = Mode.DRAW;
     Color color = Color.BLACK;
-    Color colorPrev = Color.BLACK;
     Container container = getContentPane();
 
     // Swing Variables
-    JLabel point1_label = new JLabel("(x1, y1) : ");
+    JLabel x1_label = new JLabel("            x1 : ");
     JTextField x1 = new JTextField(4);
+    JLabel y1_label = new JLabel("            y1 : ");
     JTextField y1 = new JTextField(4);
-    JLabel point2_label = new JLabel("(x2, y2) : ");
+    JLabel x2_label = new JLabel("            x2 : ");
     JTextField x2 = new JTextField(4);
+    JLabel y2_label = new JLabel("            y2 : ");
     JTextField y2 = new JTextField(4);
-    JButton draw = new JButton("그리기");
+    JLabel null_label = new JLabel("");
+    JButton draw = new JButton("draw");
     JLabel line_number_label = new JLabel("선 번호 : ");
     JTextField line_number = new JTextField(4);
 
-    JTextField x3 = new JTextField(4);
-    JTextField y3 = new JTextField(4);
-
-    JLabel line_move_label = new JLabel("움직일 x, y 길이 : ");
-    JButton move = new JButton("움직이기");
-
-
     // Methods
     public DrawingGUI() {
-        super("Computer Graphics Homework - DrawingGUI");
+        super("Computer Graphics");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        container.add(new NorthPanel(), BorderLayout.NORTH);
         container.add(new CenterPanel(), BorderLayout.CENTER);
-        container.add(new SouthPanel(), BorderLayout.SOUTH);
+        container.add(new EastPanel(), BorderLayout.EAST);
         setSize(400, 400);
         setVisible(true);
 
         draw.addActionListener(new DrawActionListener());
-        move.addActionListener(new MoveActionListener());
+        draw.addKeyListener(new MyKeyListener());
     }
 
-    class NorthPanel extends JPanel {
-        public NorthPanel() {
-            setBackground(Color.GRAY);
-
-            JButton buttonDrawLine = new JButton("Draw Line");
-            JButton buttonMoveLine = new JButton("Move Line");
-            JButton buttonColor = new JButton("Color");
-
-            buttonDrawLine.addActionListener(new ButtonDrawLineActionListener());
-            buttonMoveLine.addActionListener(new ButtonMoveLineActionListener());
-            buttonColor.addActionListener(new ButtonColorActionListener());
-
-            add(buttonDrawLine);
-            add(buttonMoveLine);
-            add(buttonColor);
-        }
-    }
     class CenterPanel extends JPanel {
 
         public CenterPanel() {
@@ -84,54 +60,48 @@ public class DrawingGUI extends JFrame{
 
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    if(mode == Mode.DRAW) {
-                        Point startP = e.getPoint();
-                        startPointArr.add(startP);
+                    if (isOnLine(e.getPoint())) {
+                        prevPt = e.getPoint();
+                        line_number.setText(selectLineNum.toString());
+                    } else {
+                        startPoint = e.getPoint();
+                        startPointArr.add(startPoint);
                         lineColorArr.add(color);
                         selectLineNum = lineColorArr.size() - 1;
-                    }
-                    if(mode == Mode.MOVE) {
-                        if (isOnLine(e.getPoint())) {
-                            prevPt = e.getPoint();
-                            line_number.setText(selectLineNum.toString());
-                        }
                     }
                 }
 
                 @Override
                 public void mouseDragged(MouseEvent e) {
-                    if(mode == Mode.MOVE) {
-                        if (prevPt != null) {
-                            int dx = e.getX() - prevPt.x;
-                            int dy = e.getY() - prevPt.y;
+                    if (prevPt != null) {
+                        int dx = e.getX() - prevPt.x;
+                        int dy = e.getY() - prevPt.y;
 
-                            startPoint.translate(dx, dy);
-                            endPoint.translate(dx, dy);
-                            prevPt = e.getPoint();
-                            repaint();
-                        }
+                        startPoint.translate(dx, dy);
+                        endPoint.translate(dx, dy);
+                        prevPt = e.getPoint();
+                        repaint();
                     }
                 }
 
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    if(mode == Mode.DRAW) {
-                        Point endP = e.getPoint();
-                        endPointArr.add(endP);
-                        repaint();
-                    }
-                    if(mode == Mode.MOVE) {
+                    if (prevPt != null) {
                         prevPt = null;
+                    } else {
+                        endPoint = e.getPoint();
+                        endPointArr.add(endPoint);
+                        repaint();
                     }
                 }
 
                 private boolean isOnLine(Point p) {
-                    for(int i = 0; i < startPointArr.size(); i++) {
+                    for (int i = 0; i < startPointArr.size(); i++) {
                         startPoint = startPointArr.get(i);
                         endPoint = endPointArr.get(i);
                         selectLineNum = i;
 
-                        if(Math.abs(distance(startPoint, p) + distance(p, endPoint) - distance(startPoint, endPoint)) < 0.5)
+                        if (Math.abs(distance(startPoint, p) + distance(p, endPoint) - distance(startPoint, endPoint)) < 1)
                             return true;
                     }
 
@@ -153,10 +123,10 @@ public class DrawingGUI extends JFrame{
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g;
-            g2.setStroke(new BasicStroke(5));
+            g2.setStroke(new BasicStroke(1));
 
             // MOVE 전용
-            if(!startPointArr.isEmpty()) g2.setColor(lineColorArr.get(selectLineNum));
+            if (!startPointArr.isEmpty()) g2.setColor(lineColorArr.get(selectLineNum));
             g2.draw(new Line2D.Double(startPoint.x, startPoint.y, endPoint.x, endPoint.y));
 
             // 나머지 선도 전부 다시 그리기
@@ -170,29 +140,22 @@ public class DrawingGUI extends JFrame{
         }
     }
 
-    class SouthPanel extends JPanel {
+    class EastPanel extends JPanel {
 
-        public SouthPanel() {
-            setBackground(Color.GRAY);
-            if(mode == Mode.DRAW) {
-                add(point1_label);
-                add(x1);
-                add(y1);
-                add(point2_label);
-                add(x2);
-                add(y2);
-                add(draw);
+        public EastPanel() {
+            setBackground(Color.YELLOW);
+            setLayout(new GridLayout(5, 2));
 
-
-            }
-            else if(mode == Mode.MOVE) {
-                add(line_number_label);
-                add(line_number);
-                add(line_move_label);
-                add(x3);
-                add(y3);
-                add(move);
-            }
+            add(x1_label);
+            add(x1);
+            add(y1_label);
+            add(y1);
+            add(x2_label);
+            add(x2);
+            add(y2_label);
+            add(y2);
+            add(null_label);
+            add(draw);
         }
     }
 
@@ -200,24 +163,8 @@ public class DrawingGUI extends JFrame{
         public void actionPerformed(ActionEvent e) {
             mode = Mode.DRAW;
             container.remove(2);
-            container.add(new SouthPanel(), BorderLayout.SOUTH);
+            container.add(new EastPanel(), BorderLayout.SOUTH);
             container.revalidate();
-        }
-    }
-
-    class ButtonMoveLineActionListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            mode = Mode.MOVE;
-            container.remove(2);
-            container.add(new SouthPanel(), BorderLayout.SOUTH);
-            container.revalidate();
-        }
-    }
-
-    class ButtonColorActionListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            color = JColorChooser.showDialog(container, "Select line color", colorPrev);
-            colorPrev = color;
         }
     }
 
@@ -233,19 +180,32 @@ public class DrawingGUI extends JFrame{
         }
     }
 
-    class MoveActionListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            int dx = Integer.parseInt(x3.getText());
-            int dy = Integer.parseInt(y3.getText());
+    class MyKeyListener extends KeyAdapter {
+        public void keyPressed(KeyEvent e) {
 
-            selectLineNum = Integer.parseInt(line_number.getText());
-            startPoint = startPointArr.get(selectLineNum);
-            endPoint = endPointArr.get(selectLineNum);
-
-            startPoint.translate(dx, dy);
-            endPoint.translate(dx, dy);
-
-            repaint();
+            int keyCode = e.getKeyCode();
+            switch (keyCode) {
+                case KeyEvent.VK_UP:
+                    startPoint.translate(0, -10);
+                    endPoint.translate(0, -10);
+                    repaint();
+                    break;
+                case KeyEvent.VK_DOWN:
+                    startPoint.translate(0, 10);
+                    endPoint.translate(0, 10);
+                    repaint();
+                    break;
+                case KeyEvent.VK_LEFT:
+                    startPoint.translate(-10, 0);
+                    endPoint.translate(-10, 0);
+                    repaint();
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    startPoint.translate(10, 0);
+                    endPoint.translate(10, 0);
+                    repaint();
+                    break;
+            }
         }
     }
 
